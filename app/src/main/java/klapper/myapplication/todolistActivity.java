@@ -2,24 +2,22 @@ package klapper.myapplication;
 
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Color;
-import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.SearchView;
-import android.widget.TextView;
 
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.List;
 
 import io.realm.Realm;
+import io.realm.RealmQuery;
+import io.realm.RealmResults;
 
 /**
  * Created by c1103304 on 2017/4/14.
@@ -27,11 +25,12 @@ import io.realm.Realm;
 
 public class todolistActivity extends AppCompatActivity{
     ListView mListView;
-    customAdapter mListAdapter;
+    public static customAdapter mListAdapter;
     String username,userlevel;
-    SearchView searchView;
-    List<todolist> user_todo_list;
-    Realm realm;
+    EditText searchView;
+    public List<todolist> user_todo_list;
+    List<todolist2> user_list;
+    public static Realm realm;
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -45,46 +44,25 @@ public class todolistActivity extends AppCompatActivity{
         Intent getintent = getIntent();
         username = getintent.getStringExtra("username");
         mListView = (ListView)findViewById(R.id.listview);
-        //mListView.setOnItemClickListener(clickListener);
 
-        searchView = (SearchView)findViewById(R.id.searchView);
-        // 設置SearchView 直接展開搜尋輸入欄位
-        searchView.setIconifiedByDefault(false);
-        searchView.setFocusable(false);
-        int id = searchView.getContext()
-                .getResources()
-                .getIdentifier("android:id/search_src_text", null, null);
-        TextView textView = (TextView) searchView.findViewById(id);
-        textView.setTextColor(Color.DKGRAY);
+        searchView = (EditText)findViewById(R.id.editText);
 
-        searchdata();
+
     }
 
-    private void searchdata(){
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-                return false;
-            }
-
-            @Override
-            public boolean onQueryTextChange(String newText) {
-                //Log.d("MYLOG","QuertyText: "+newText);
-                mListAdapter.getFilter().filter(newText);
-                return true;
-            }
-        });
+    public void searchdata(View v){
+        user_todo_list = realm.where(todolist.class).equalTo("username",username).contains("title",searchView.getText().toString())
+                .or().equalTo("username",username).contains("content",searchView.getText().toString())
+                .or().equalTo("username",username).contains("datatime",searchView.getText().toString()).findAll();
+        mListAdapter = new customAdapter(this,user_todo_list);
+        mListView.setAdapter(mListAdapter);
     }
 
     private void listViewLoad() {
-        Log.d("MYLOG","username: "+username);
+        user_list = new ArrayList<>();
         user_todo_list = realm.where(todolist.class).equalTo("username",username).findAll();
-        for(todolist us:user_todo_list){
-            Log.d("MYLOG",us.getTitle());
-        }
         mListAdapter = new customAdapter(this,user_todo_list);
         mListView.setAdapter(mListAdapter);
-        mListView.setTextFilterEnabled(true);
     }
 
 
@@ -107,8 +85,10 @@ public class todolistActivity extends AppCompatActivity{
                 info.setUsername(username);
                 info.setTitle(titleText.getText().toString());
                 info.setContent(contentText.getText().toString());
-                info.setDatatime("9999/99/99");
+                SimpleDateFormat sDateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+                info.setDatatime(sDateFormat.format(new java.util.Date()));
                 realm.commitTransaction();
+                mListAdapter.notifyDataSetChanged();
             }
         });
         alert.setNegativeButton("取消", new DialogInterface.OnClickListener() {
@@ -118,6 +98,14 @@ public class todolistActivity extends AppCompatActivity{
             }
         });
         alert.show();
+    }
+
+    public static void deleteItem(String username,String title,String content){
+        realm.beginTransaction();
+        RealmQuery<todolist> query = realm.where(todolist.class);
+        query.equalTo("username",username).equalTo("title",title).equalTo("content",content).findFirst().deleteFromRealm();
+        realm.commitTransaction();
+        mListAdapter.notifyDataSetChanged();
     }
 
     @Override
