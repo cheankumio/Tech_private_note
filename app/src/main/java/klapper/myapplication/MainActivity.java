@@ -5,8 +5,12 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.Toast;
+
+import com.romainpiel.shimmer.Shimmer;
+import com.romainpiel.shimmer.ShimmerTextView;
 
 import java.util.List;
 
@@ -25,6 +29,11 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        getSupportActionBar().hide();
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
         Realm.init(this);
         setUpElement();
 
@@ -43,6 +52,8 @@ public class MainActivity extends AppCompatActivity {
 
         realm = Realm.getDefaultInstance();
 
+        Shimmer shimmer = new Shimmer();
+        shimmer.start((ShimmerTextView)findViewById(R.id.shimmer_tv));
     }
 
     public void login(View v){
@@ -68,6 +79,8 @@ public class MainActivity extends AppCompatActivity {
                 in.putExtra("username",inputName);
                 in.setClass(this,todolistActivity.class);
                 startActivity(in);
+                overridePendingTransition(android.R.anim.fade_in,android.R.anim.fade_out);
+
             } else {
                 Toast.makeText(this, "密碼錯誤.", Toast.LENGTH_SHORT).show();
             }
@@ -86,8 +99,9 @@ public class MainActivity extends AppCompatActivity {
             user.setUsername(inputName);
             user.setPassword(inputPassword);
             realm.commitTransaction();
-
             Toast.makeText(this, inputName+" 註冊成功.", Toast.LENGTH_SHORT).show();
+        }else{
+            Toast.makeText(this, "註冊失敗.", Toast.LENGTH_SHORT).show();
         }
     }
 

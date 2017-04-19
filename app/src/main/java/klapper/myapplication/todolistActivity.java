@@ -7,6 +7,7 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -35,6 +36,11 @@ public class todolistActivity extends AppCompatActivity{
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.todolist_layout);
+
+        getSupportActionBar().hide();
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
         realm = MainActivity.realm;
         setUpIfNeeded();
         listViewLoad();
@@ -44,11 +50,9 @@ public class todolistActivity extends AppCompatActivity{
         Intent getintent = getIntent();
         username = getintent.getStringExtra("username");
         mListView = (ListView)findViewById(R.id.listview);
-
         searchView = (EditText)findViewById(R.id.editText);
-
-
     }
+
 
     public void searchdata(View v){
         user_todo_list = realm.where(todolist.class).equalTo("username",username).contains("title",searchView.getText().toString())
