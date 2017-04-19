@@ -1,11 +1,13 @@
 package klapper.myapplication;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -24,6 +26,8 @@ public class MainActivity extends AppCompatActivity {
     // 宣告元件
     EditText username;
     EditText password;
+    CheckBox checkBox;
+    SharedPreferences pb;
     public static Realm realm;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,8 +52,15 @@ public class MainActivity extends AppCompatActivity {
          */
         username = (EditText)findViewById(R.id.editText3);
         password = (EditText)findViewById(R.id.editText5);
+        checkBox = (CheckBox)findViewById(R.id.checkBox2);
+        pb = this.getSharedPreferences("DATA",0);
 
-
+        boolean OnOff = pb.getBoolean("checkbox_state",false);
+        checkBox.setChecked(OnOff);
+        if(checkBox.isChecked()){
+            username.setText(pb.getString("username",""));
+            password.setText(pb.getString("password",""));
+        }
         realm = Realm.getDefaultInstance();
 
         Shimmer shimmer = new Shimmer();
@@ -57,6 +68,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void login(View v){
+        if(checkBox.isChecked()){
+            pb.edit().putString("username",username.getText().toString())
+                    .putString("password",password.getText().toString())
+                    .putBoolean("checkbox_state",true)
+                    .commit();
+        }
         // 在login方法下，註冊兩個String 字串，用來暫存使用者輸入資料
         String inputName = username.getText().toString();
         String inputPassword = password.getText().toString();
